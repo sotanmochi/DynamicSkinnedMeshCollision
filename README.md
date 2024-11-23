@@ -1,1 +1,1 @@
-# DynamicSkinnedMeshCollider
+# Dynamic Skinned Mesh Collision
