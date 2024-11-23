@@ -1,0 +1,17 @@
+This repository includes the following third-party libraries or resources.
+
+--------------------------------------------------------------------------------
+
+UnityChanKAGURA
+https://github.com/unity3d-jp/UnityChanKAGURA
+
+---
+
+Unity-Chan License 2.0 (UCL2.0)
+
+© Unity Technologies Japan/UCL
+
+https://unity-chan.com/contents/license_jp/
+https://unity-chan.com/contents/license_en/
+
+--------------------------------------------------------------------------------
