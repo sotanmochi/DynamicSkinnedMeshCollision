@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using Unity.Collections;
+using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -24,6 +25,8 @@ namespace DynamicSkinnedMeshCollision
         SkinnedMeshRenderer _skinnedMeshRenderer;
         MeshCollider _meshCollider;
         Mesh _mesh;
+
+        JobHandle _bakeMeshJob;
 
         NativeArray<VertexData> _vertexDataArray;
         ComputeBuffer _outputVertexBuffer;
@@ -164,13 +167,16 @@ namespace DynamicSkinnedMeshCollision
 				_mesh.MarkDynamic();
 				_mesh.SetVertexBufferData(_vertexDataArray, 0, 0, _vertexDataArray.Length);
                 _meshUpdated = true;
+
+                _bakeMeshJob = new BakeMeshJob(_mesh.GetInstanceID()).Schedule();
             }
         }
 
         void UpdateColliderMesh()
         {
-            if (_meshUpdated)
+            if (_meshUpdated && _bakeMeshJob.IsCompleted)
             {
+                _bakeMeshJob.Complete();
                 _meshCollider.sharedMesh = _mesh;
                 RequestMeshDataReadback();
             }
