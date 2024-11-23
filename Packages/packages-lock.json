@@ -181,6 +181,12 @@
       },
       "url": "https://packages.unity.com"
     },
+    "jp.sotanmochi.dynamic-skinned-mesh-collision": {
+      "version": "file:DynamicSkinnedMeshCollision",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.unity.modules.ai": {
       "version": "1.0.0",
       "depth": 0,
