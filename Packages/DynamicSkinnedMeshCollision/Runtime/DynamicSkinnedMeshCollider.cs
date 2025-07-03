@@ -36,13 +36,16 @@ namespace DynamicSkinnedMeshCollision
         int _dispatchCount;
         AsyncGPUReadbackRequest _readbackRequest;
 
+        public SkinnedMeshRenderer SkinnedMeshRenderer => _skinnedMeshRenderer;
+        public Mesh Mesh => _mesh;
+
         public bool AutoInitialize
         {
             get => _autoInitialize;
             set => _autoInitialize = value;
         }
 
-#region MonoBehaviour Callbacks
+        #region MonoBehaviour Callbacks
 
         void Start()
         {
@@ -67,7 +70,7 @@ namespace DynamicSkinnedMeshCollision
             Release();
         }
 
-#endregion
+        #endregion
 
         public void Initialize()
         {
@@ -80,7 +83,7 @@ namespace DynamicSkinnedMeshCollision
                 return;
             }
 
-            if(!SystemInfo.supportsAsyncGPUReadback)
+            if (!SystemInfo.supportsAsyncGPUReadback)
             {
                 Debug.Log($"<color=orange>[{nameof(DynamicSkinnedMeshCollider)}] AsyncGPUReadback is not supported on this device.</color>");
                 gameObject.SetActive(false);
@@ -100,6 +103,10 @@ namespace DynamicSkinnedMeshCollision
 
             _skinnedMeshRenderer.BakeMesh(_mesh);
 
+            var bonesPerVertex = _skinnedMeshRenderer.sharedMesh.GetBonesPerVertex();
+            var boneWeights = _skinnedMeshRenderer.sharedMesh.GetAllBoneWeights();
+            _mesh.SetBoneWeights(bonesPerVertex, boneWeights);
+
             _meshCollider = gameObject.GetOrAddComponent<MeshCollider>();
             _meshCollider.sharedMesh = _mesh;
 
@@ -118,7 +125,7 @@ namespace DynamicSkinnedMeshCollision
             _computeShader = ComputeShader.Instantiate(Resources.Load<ComputeShader>(ShaderName));
             _kernelId = _computeShader.FindKernel(KernelName);
             _computeShader.GetKernelThreadGroupSizes(_kernelId, out threadGroupSizeX, out threadGroupSizeY, out threadGroupSizeZ);
-            _dispatchCount = Mathf.CeilToInt(vertexCount / (float) threadGroupSizeX);
+            _dispatchCount = Mathf.CeilToInt(vertexCount / (float)threadGroupSizeX);
 
             // Initialize mesh vertex array
             _vertexDataArray = new NativeArray<VertexData>(vertexCount, Allocator.Temp);
@@ -132,7 +139,7 @@ namespace DynamicSkinnedMeshCollision
 
             // Initialize compute buffer
             _outputVertexBuffer = new ComputeBuffer(vertexCount, 3 * 4); // 3 * 4bytes = sizeof(Vector3)
-            if(_vertexDataArray.IsCreated) _outputVertexBuffer.SetData(_vertexDataArray);
+            if (_vertexDataArray.IsCreated) _outputVertexBuffer.SetData(_vertexDataArray);
 
             RequestMeshDataReadback();
 
@@ -161,11 +168,11 @@ namespace DynamicSkinnedMeshCollision
         void UpdateMesh()
         {
             if (_readbackRequest.done && !_readbackRequest.hasError)
-			{
-				_vertexDataArray = _readbackRequest.GetData<VertexData>();
+            {
+                _vertexDataArray = _readbackRequest.GetData<VertexData>();
 
-				_mesh.MarkDynamic();
-				_mesh.SetVertexBufferData(_vertexDataArray, 0, 0, _vertexDataArray.Length);
+                _mesh.MarkDynamic();
+                _mesh.SetVertexBufferData(_vertexDataArray, 0, 0, _vertexDataArray.Length);
                 _meshUpdated = true;
 
                 _bakeMeshJob = new BakeMeshJob(_mesh.GetInstanceID()).Schedule();
